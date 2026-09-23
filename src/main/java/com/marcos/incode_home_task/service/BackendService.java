@@ -21,7 +21,7 @@ public class BackendService
 
     public BackendResponse search(UUID verificationId, String query)
     {
-        List<Company> companiesFound = findCompanies(query);
+        List<Company> companiesFound = thirdPartyService.findCompanies(query);
 
         if (companiesFound.isEmpty())
         {
@@ -44,19 +44,6 @@ public class BackendService
                 SearchResult.found(
                         CompanyResponse.from(firstCompanyResult),
                         otherResults));
-    }
-
-    private List<Company> findCompanies(String query)
-    {
-        List<Company> freeResults = thirdPartyService.findFreeResults(query);
-
-        List<Company> companiesFound = freeResults.isEmpty()
-                ? thirdPartyService.findPremiumResults(query)
-                : freeResults;
-
-        return companiesFound.stream()
-                .filter(Company::active)
-                .toList();
     }
 
 }
