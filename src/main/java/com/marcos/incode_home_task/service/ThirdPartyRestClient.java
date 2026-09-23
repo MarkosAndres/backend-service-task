@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ThirdPartyRestClient
@@ -28,13 +29,15 @@ public class ThirdPartyRestClient
     @CircuitBreaker(name = "freeThirdParty", fallbackMethod = "findPremiumResults")
     public List<Company> findFreeResults(String query)
     {
-        return restClient.get()
+        List<FreeCompanyResponse> responseBody = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/free-third-party")
                         .queryParam("query", query)
                         .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<FreeCompanyResponse>>(){})
+                .body(new ParameterizedTypeReference<>(){});
+
+        return Objects.requireNonNull(responseBody, "Free third-party response body must not be null")
                 .stream()
                 .map(response ->
                         new Company(
@@ -46,16 +49,18 @@ public class ThirdPartyRestClient
                 .toList();
     }
 
-    @CircuitBreaker(name = "premiumThirdParty", fallbackMethod = "handlePremiumFailure")
+    @CircuitBreaker(name = "premiumThirdParty", fallbackMethod = "handlePremiumFailure") // todo i dont think is necessary, as excetion can be thrown, maybe retry?
     public List<Company> findPremiumResults(String query)
     {
-        return restClient.get()
+        List<PremiumCompanyResponse> responseBody = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/premium-third-party")
                         .queryParam("query", query)
                         .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<PremiumCompanyResponse>>(){})
+                .body(new ParameterizedTypeReference<>(){});
+
+        return Objects.requireNonNull(responseBody, "Premium third-party response body must not be null")
                 .stream()
                 .map(response ->
                         new Company(
