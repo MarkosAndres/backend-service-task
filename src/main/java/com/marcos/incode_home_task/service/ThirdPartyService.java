@@ -21,25 +21,14 @@ public class ThirdPartyService
 
     public List<Company> findCompanies(String query)
     {
-        List<Company> freeResults = findFreeResults(query);
+        List<Company> freeResults = freeThirdPartyClient.findResults(query);
 
         List<Company> companiesFound = freeResults.isEmpty()
-                ? findPremiumResults(query)
+                ? premiumThirdPartyClient.findResults(query)
                 : freeResults;
 
         return companiesFound.stream()
                 .filter(Company::active)
                 .toList();
     }
-
-    public List<Company> findFreeResults(String query)
-    {
-        return freeThirdPartyClient.findResults(query);
-    }
-
-    public List<Company> findPremiumResults(String query)
-    {
-        return premiumThirdPartyClient.findResults(query);
-    }
-
 }
