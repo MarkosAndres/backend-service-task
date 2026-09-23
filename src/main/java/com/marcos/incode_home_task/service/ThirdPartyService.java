@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
-public class ThirdPartyRestClient
+public class ThirdPartyService
 {
     private final RestClient restClient;
 
-    public ThirdPartyRestClient(@Value("${third-party.base-url}") String thirdPartyBaseUrl)
+    public ThirdPartyService(@Value("${third-party.base-url}") String thirdPartyBaseUrl)
     {
         restClient = RestClient
                 .builder()
@@ -26,7 +26,7 @@ public class ThirdPartyRestClient
                 .build();
     }
 
-    @CircuitBreaker(name = "freeThirdParty", fallbackMethod = "findPremiumResults")
+    @CircuitBreaker(name = "freeThirdParty", fallbackMethod = "fallbackToPremium")
     public List<Company> findFreeResults(String query)
     {
         List<FreeCompanyResponse> responseBody = restClient.get()
@@ -49,7 +49,12 @@ public class ThirdPartyRestClient
                 .toList();
     }
 
-    @CircuitBreaker(name = "premiumThirdParty", fallbackMethod = "handlePremiumFailure") // todo i dont think is necessary, as excetion can be thrown, maybe retry?
+    public List<Company> fallbackToPremium(String query, Throwable throwable)
+    {
+        return findPremiumResults(query);
+    }
+
+    @CircuitBreaker(name = "premiumThirdParty", fallbackMethod = "handlePremiumFailure")
     public List<Company> findPremiumResults(String query)
     {
         List<PremiumCompanyResponse> responseBody = restClient.get()

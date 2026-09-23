@@ -12,11 +12,11 @@ import java.util.UUID;
 @Service
 public class BackendService
 {
-    private final ThirdPartyRestClient thirdPartyRestClient;
+    private final ThirdPartyService thirdPartyService;
 
-    public BackendService(ThirdPartyRestClient thirdPartyRestClient)
+    public BackendService(ThirdPartyService thirdPartyService)
     {
-        this.thirdPartyRestClient = thirdPartyRestClient;
+        this.thirdPartyService = thirdPartyService;
     }
 
     public BackendResponse search(UUID verificationId, String query)
@@ -48,10 +48,10 @@ public class BackendService
 
     private List<Company> findCompanies(String query)
     {
-        List<Company> freeResults = thirdPartyRestClient.findFreeResults(query);
+        List<Company> freeResults = thirdPartyService.findFreeResults(query);
 
         List<Company> companiesFound = freeResults.isEmpty()
-                ? thirdPartyRestClient.findPremiumResults(query)
+                ? thirdPartyService.findPremiumResults(query)
                 : freeResults;
 
         return companiesFound.stream()
