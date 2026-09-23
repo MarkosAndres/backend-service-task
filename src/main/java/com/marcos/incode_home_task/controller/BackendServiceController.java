@@ -1,15 +1,16 @@
 package com.marcos.incode_home_task.controller;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.marcos.incode_home_task.company.Company;
+import com.marcos.incode_home_task.dto.BackendResponse;
+import com.marcos.incode_home_task.dto.CompanyResponse;
 import com.marcos.incode_home_task.dto.FreeCompanyResponse;
 import com.marcos.incode_home_task.dto.PremiumCompanyResponse;
+import com.marcos.incode_home_task.dto.SearchResult;
 import com.marcos.incode_home_task.exception.BackendServiceUnavailableException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -91,43 +92,6 @@ public class BackendServiceController
         catch (RuntimeException exception)
         {
             throw new BackendServiceUnavailableException();
-        }
-    }
-
-    public record BackendResponse(UUID verificationId, String query, SearchResult result)
-    {
-    }
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record SearchResult(String status, CompanyResponse company, List<CompanyResponse> otherResults)
-    {
-        static SearchResult found(CompanyResponse company, List<CompanyResponse> otherResults)
-        {
-            return new SearchResult(
-                    "FOUND",
-                    company,
-                    otherResults.isEmpty()
-                            ? null
-                            : otherResults);
-        }
-
-        static SearchResult noResults()
-        {
-            return new SearchResult("NO_RESULTS", null, null);
-        }
-
-    }
-
-    public record CompanyResponse(String cin, String name, LocalDate registrationDate, String address, boolean isActive)
-    {
-        static CompanyResponse from(Company company)
-        {
-            return new CompanyResponse(
-                    company.cin(),
-                    company.name(),
-                    company.registrationDate(),
-                    company.address(),
-                    company.active());
         }
     }
 }
