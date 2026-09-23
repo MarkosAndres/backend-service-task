@@ -1,3 +1,20 @@
 spring:
   application:
     name: incode-home-task
+
+third-party:
+  base-url: http://localhost:8080
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      freeThirdParty:
+        failureRateThreshold: 50
+        slidingWindowSize: 4
+        minimumNumberOfCalls: 2
+        waitDurationInOpenState: 30s
+      premiumThirdParty:
+        failureRateThreshold: 50
+        slidingWindowSize: 4
+        minimumNumberOfCalls: 2
+        waitDurationInOpenState: 30s
