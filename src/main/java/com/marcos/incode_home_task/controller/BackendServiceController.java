@@ -3,7 +3,7 @@ package com.marcos.incode_home_task.controller;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.marcos.incode_home_task.company.Company;
 import com.marcos.incode_home_task.dto.FreeCompanyResponse;
-import com.marcos.incode_home_task.exception.FreeServiceUnavailableException;
+import com.marcos.incode_home_task.exception.BackendServiceUnavailableException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,25 +32,15 @@ public class BackendServiceController
         try
         {
             matches = fromFree(freeThirdParty.search(query));
-            if (matches.isEmpty())
-            {
-                matches = fromPremium(premiumThirdParty.search(query));
-            }
         }
-        catch (FreeServiceUnavailableException exception)
+        catch (RuntimeException exception)
         {
-            try
-            {
-                matches = fromPremium(premiumThirdParty.search(query));
-            }
-            catch (PremiumThirdPartyController.PremiumServiceUnavailableException premiumException)
-            {
-                return new BackendResponse(verificationId, query, SearchResult.thirdPartiesDown());
-            }
+            matches = findPremiumResults(query);
         }
-        catch (PremiumThirdPartyController.PremiumServiceUnavailableException exception)
+
+        if (matches.isEmpty())
         {
-            return new BackendResponse(verificationId, query, SearchResult.thirdPartiesDown());
+            matches = findPremiumResults(query);
         }
 
         List<Company> activeMatches = matches.stream().filter(Company::active).toList();
@@ -91,6 +81,18 @@ public class BackendServiceController
                 .toList();
     }
 
+    private List<Company> findPremiumResults(String query)
+    {
+        try
+        {
+            return fromPremium(premiumThirdParty.search(query));
+        }
+        catch (RuntimeException exception)
+        {
+            throw new BackendServiceUnavailableException();
+        }
+    }
+
     public record BackendResponse(UUID verificationId, String query, SearchResult result)
     {
     }
@@ -113,10 +115,6 @@ public class BackendServiceController
             return new SearchResult("NO_RESULTS", null, null);
         }
 
-        static SearchResult thirdPartiesDown()
-        {
-            return new SearchResult("THIRD_PARTIES_DOWN", null, null);
-        }
     }
 
     public record CompanyResponse(String cin, String name, LocalDate registrationDate, String address, boolean isActive)
