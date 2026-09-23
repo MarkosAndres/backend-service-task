@@ -21,19 +21,9 @@ public class BackendService
 
     public BackendResponse search(UUID verificationId, String query)
     {
-        List<Company> companiesFound = thirdPartyRestClient.findFreeResults(query);
+        List<Company> companiesFound = findCompanies(query);
 
         if (companiesFound.isEmpty())
-        {
-            companiesFound = thirdPartyRestClient.findPremiumResults(query);
-        }
-
-        List<Company> activeCompaniesFound = companiesFound
-                .stream()
-                .filter(Company::active)
-                .toList();
-
-        if (activeCompaniesFound.isEmpty())
         {
             return new BackendResponse(
                     verificationId,
@@ -41,9 +31,9 @@ public class BackendService
                     SearchResult.noResults());
         }
 
-        Company firstCompanyResult = activeCompaniesFound.getFirst();
-        List<CompanyResponse> otherResults = activeCompaniesFound
-                .subList(1, activeCompaniesFound.size())
+        Company firstCompanyResult = companiesFound.getFirst();
+        List<CompanyResponse> otherResults = companiesFound
+                .subList(1, companiesFound.size())
                 .stream()
                 .map(CompanyResponse::from)
                 .toList();
@@ -54,6 +44,19 @@ public class BackendService
                 SearchResult.found(
                         CompanyResponse.from(firstCompanyResult),
                         otherResults));
+    }
+
+    private List<Company> findCompanies(String query)
+    {
+        List<Company> freeResults = thirdPartyRestClient.findFreeResults(query);
+
+        List<Company> companiesFound = freeResults.isEmpty()
+                ? thirdPartyRestClient.findPremiumResults(query)
+                : freeResults;
+
+        return companiesFound.stream()
+                .filter(Company::active)
+                .toList();
     }
 
 }
