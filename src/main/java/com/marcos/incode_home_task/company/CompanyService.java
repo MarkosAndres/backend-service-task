@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Component
-public class CompanyCatalog
+public class CompanyService
 {
     private final ObjectMapper objectMapper = new ObjectMapper();
 

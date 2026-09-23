@@ -1,6 +1,6 @@
 package com.marcos.incode_home_task.controller;
 
-import com.marcos.incode_home_task.company.CompanyCatalog;
+import com.marcos.incode_home_task.company.CompanyService;
 import com.marcos.incode_home_task.company.ThirdPartyUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,9 +15,9 @@ import java.util.concurrent.ThreadLocalRandom;
 @RestController
 public class PremiumThirdPartyController
 {
-    private final CompanyCatalog catalog;
+    private final CompanyService catalog;
 
-    public PremiumThirdPartyController(CompanyCatalog catalog)
+    public PremiumThirdPartyController(CompanyService catalog)
     {
         this.catalog = catalog;
     }

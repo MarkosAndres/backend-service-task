@@ -2,6 +2,8 @@ package com.marcos.incode_home_task.controller;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.marcos.incode_home_task.company.Company;
+import com.marcos.incode_home_task.dto.FreeCompanyResponse;
+import com.marcos.incode_home_task.exception.FreeServiceUnavailableException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,7 +37,7 @@ public class BackendServiceController
                 matches = fromPremium(premiumThirdParty.search(query));
             }
         }
-        catch (FreeThirdPartyController.FreeServiceUnavailableException exception)
+        catch (FreeServiceUnavailableException exception)
         {
             try
             {
@@ -63,7 +65,7 @@ public class BackendServiceController
         return new BackendResponse(verificationId, query, SearchResult.found(CompanyResponse.from(first), otherResults));
     }
 
-    private List<Company> fromFree(List<FreeThirdPartyController.FreeCompanyResponse> responses)
+    private List<Company> fromFree(List<FreeCompanyResponse> responses)
     {
         return responses
                 .stream()
