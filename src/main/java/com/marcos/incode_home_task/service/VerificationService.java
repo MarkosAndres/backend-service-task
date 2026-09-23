@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class VerificationService
@@ -55,6 +56,20 @@ public class VerificationService
                         verification.getTimestamp(),
                         deserialize(verification.getResult()),
                         verification.getSource()));
+    }
+
+    public List<VerificationResponse> findAll()
+    {
+        List<VerificationResponse> verifications = verificationRepository.findAll().stream()
+                .map(verification -> new VerificationResponse(
+                        verification.getVerificationId(),
+                        verification.getQueryText(),
+                        verification.getTimestamp(),
+                        deserialize(verification.getResult()),
+                        verification.getSource()))
+                .toList();
+        log.info("Retrieved all verifications: resultCount={}", verifications.size());
+        return verifications;
     }
 
     private String serialize(BackendResponse response)

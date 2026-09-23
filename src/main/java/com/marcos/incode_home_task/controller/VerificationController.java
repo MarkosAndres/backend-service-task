@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
+import java.util.List;
 
 @RestController
 public class VerificationController
@@ -36,5 +37,12 @@ public class VerificationController
                     log.info("Verification was not found: verificationId={}", verificationId);
                     return ResponseEntity.notFound().build();
                 });
+    }
+
+    @GetMapping("/verifications")
+    public List<VerificationResponse> findAll()
+    {
+        log.info("Received request to retrieve all verifications");
+        return verificationService.findAll();
     }
 }
