@@ -3,6 +3,7 @@ package com.marcos.incode_home_task.controller;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.marcos.incode_home_task.company.Company;
 import com.marcos.incode_home_task.dto.FreeCompanyResponse;
+import com.marcos.incode_home_task.dto.PremiumCompanyResponse;
 import com.marcos.incode_home_task.exception.BackendServiceUnavailableException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -68,7 +69,7 @@ public class BackendServiceController
                 .toList();
     }
 
-    private List<Company> fromPremium(List<PremiumThirdPartyController.PremiumCompanyResponse> responses)
+    private List<Company> fromPremium(List<PremiumCompanyResponse> responses)
     {
         return responses
                 .stream()

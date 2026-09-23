@@ -4,6 +4,6 @@ public class PremiumServiceUnavailableException extends RuntimeException
 {
     public PremiumServiceUnavailableException()
     {
-        super("Premium third-party service");
+        super("Premium third-party service unavailable");
     }
 }
