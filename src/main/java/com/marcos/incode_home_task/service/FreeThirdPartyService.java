@@ -24,7 +24,6 @@ public class FreeThirdPartyService
 
     public List<FreeCompanyResponse> search(String query)
     {
-//        log.info("Searching free provider data: query={}", query);
         if (ThreadLocalRandom.current().nextInt(10) < 4)
         {
             log.warn("Free provider is unavailable: query={}", query);

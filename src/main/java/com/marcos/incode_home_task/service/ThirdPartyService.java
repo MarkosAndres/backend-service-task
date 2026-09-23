@@ -1,6 +1,8 @@
 package com.marcos.incode_home_task.service;
 
 import com.marcos.incode_home_task.company.Company;
+import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
+import com.marcos.incode_home_task.verification.VerificationSource;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.core.SupplierUtils;
@@ -32,38 +34,49 @@ public class ThirdPartyService
         premiumCircuitBreaker = circuitBreakerRegistry.circuitBreaker("premiumThirdParty");
     }
 
-    public List<Company> findCompanies(String query)
+    public ThirdPartySearchResult findCompanies(String query)
     {
-        Supplier<List<Company>> freeSupplier = CircuitBreaker.decorateCheckedSupplier(
+        log.info("Searching through free third-party provider: query={}, circuitState={}",
+                query, freeCircuitBreaker.getState());
+        Supplier<ThirdPartySearchResult> freeSupplier = CircuitBreaker.decorateCheckedSupplier(
                 freeCircuitBreaker,
-                () -> freeThirdPartyClient.findResults(query))
+                () -> new ThirdPartySearchResult(
+                        freeThirdPartyClient.findResults(query),
+                        VerificationSource.FREE))
         .unchecked();
 
-        List<Company> freeResults = SupplierUtils.recover(
+        ThirdPartySearchResult searchResult = SupplierUtils.recover(
                         freeSupplier,
                         exception ->
                         {
-                            log.warn("Free provider failed; falling back to premium provider: query={}", query);
+                            log.warn("Free provider failed; falling back to premium provider: query={}", query, exception);
                             return this.findCompaniesPremiumService(query);
                         })
                 .get();
 
-        return freeResults.stream()
+        List<Company> activeCompanies = searchResult.companies().stream()
                 .filter(Company::active)
                 .toList();
+        log.info("Third-party search completed: query={}, source={}, activeResultCount={}",
+                query, searchResult.source(), activeCompanies.size());
+        return new ThirdPartySearchResult(activeCompanies, searchResult.source());
     }
 
-    private List<Company> findCompaniesPremiumService(String query)
+    private ThirdPartySearchResult findCompaniesPremiumService(String query)
     {
-        Supplier<List<Company>> premiumSupplier = CircuitBreaker.decorateCheckedSupplier(
+        log.info("Searching through premium third-party provider: query={}, circuitState={}",
+                query, premiumCircuitBreaker.getState());
+        Supplier<ThirdPartySearchResult> premiumSupplier = CircuitBreaker.decorateCheckedSupplier(
                 premiumCircuitBreaker,
-                () -> premiumThirdPartyClient.findResults(query))
+                () -> new ThirdPartySearchResult(
+                        premiumThirdPartyClient.findResults(query),
+                        VerificationSource.PREMIUM))
         .unchecked();
 
         return SupplierUtils.recover(premiumSupplier, exception ->
         {
             log.error("Premium provider failed; returning no results: query={}", query, exception);
-            return List.of();
+            return new ThirdPartySearchResult(List.of(), VerificationSource.PREMIUM);
         }).get();
     }
 }

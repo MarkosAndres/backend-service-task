@@ -1,6 +1,8 @@
 spring:
   application:
     name: incode-home-task
+  profiles:
+    default: local
 
 third-party:
   base-url: http://localhost:8080
