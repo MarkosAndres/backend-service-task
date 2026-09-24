@@ -7,6 +7,8 @@ import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
 import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
 import com.marcos.incode_home_task.verification.VerificationSource;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -24,10 +26,12 @@ public class FreeThirdPartyClient
 
     private final RestClient restClient;
     private final PremiumThirdPartyClient premiumThirdPartyClient;
+    private final MeterRegistry meterRegistry;
 
     public FreeThirdPartyClient(
             @Value("${third-party.base-url}") String thirdPartyBaseUrl,
-            PremiumThirdPartyClient premiumThirdPartyClient)
+            PremiumThirdPartyClient premiumThirdPartyClient,
+            MeterRegistry meterRegistry)
     {
         restClient = RestClient.builder()
                 .baseUrl(thirdPartyBaseUrl)
@@ -47,6 +51,7 @@ public class FreeThirdPartyClient
                 })
                 .build();
         this.premiumThirdPartyClient = premiumThirdPartyClient;
+        this.meterRegistry = meterRegistry;
     }
 
     @CircuitBreaker(name = "freeThirdParty", fallbackMethod = "findResultsFromPremium")
@@ -54,6 +59,7 @@ public class FreeThirdPartyClient
             throws ThirdPartyServiceException
     {
         log.info("Calling free third-party provider");
+        Timer.Sample sample = Timer.start(meterRegistry);
         try
         {
             FreeCompanyResponse[] responseBody = restClient.get()
@@ -84,6 +90,12 @@ public class FreeThirdPartyClient
         {
             log.warn("Free third-party provider call failed", exception);
             throw new ThirdPartyServiceException(exception, VerificationSource.FREE);
+        }
+        finally
+        {
+            sample.stop(Timer.builder("third.party.request.duration")
+                    .tag("provider", "free")
+                    .register(meterRegistry));
         }
     }
 

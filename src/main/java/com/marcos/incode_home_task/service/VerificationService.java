@@ -7,6 +7,7 @@ import com.marcos.incode_home_task.dto.VerificationResponse;
 import com.marcos.incode_home_task.verification.VerificationEntity;
 import com.marcos.incode_home_task.verification.VerificationRepository;
 import com.marcos.incode_home_task.verification.VerificationSource;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,14 @@ public class VerificationService
 
     private final VerificationRepository verificationRepository;
     private final ObjectMapper objectMapper;
-    public VerificationService(VerificationRepository verificationRepository, ObjectMapper objectMapper)
+    private final MeterRegistry meterRegistry;
+
+    public VerificationService(VerificationRepository verificationRepository, ObjectMapper objectMapper,
+            MeterRegistry meterRegistry)
     {
         this.verificationRepository = verificationRepository;
         this.objectMapper = objectMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     @Transactional
@@ -42,6 +47,11 @@ public class VerificationService
                 source);
 
         verificationRepository.save(verification);
+        meterRegistry.counter(
+                        "verifications.completed",
+                        "source", source.name(),
+                        "outcome", result.result().status())
+                .increment();
         log.info("Stored verification: source={}, resultStatus={}", source, result.result().status());
     }
 

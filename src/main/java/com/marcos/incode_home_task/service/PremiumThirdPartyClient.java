@@ -6,6 +6,8 @@ import com.marcos.incode_home_task.dto.PremiumCompanyResponse;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
 import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
 import com.marcos.incode_home_task.verification.VerificationSource;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -22,8 +24,10 @@ public class PremiumThirdPartyClient
     private static final Logger log = LoggerFactory.getLogger(PremiumThirdPartyClient.class);
 
     private final RestClient restClient;
+    private final MeterRegistry meterRegistry;
 
-    public PremiumThirdPartyClient(@Value("${third-party.base-url}") String thirdPartyBaseUrl)
+    public PremiumThirdPartyClient(@Value("${third-party.base-url}") String thirdPartyBaseUrl,
+            MeterRegistry meterRegistry)
     {
         restClient = RestClient.builder()
                 .baseUrl(thirdPartyBaseUrl)
@@ -42,12 +46,14 @@ public class PremiumThirdPartyClient
                     return execution.execute(request, body);
                 })
                 .build();
+        this.meterRegistry = meterRegistry;
     }
 
     public ThirdPartySearchResult findResults(String query)
             throws ThirdPartyServiceException
     {
         log.info("Calling premium third-party provider");
+        Timer.Sample sample = Timer.start(meterRegistry);
         try
         {
             PremiumCompanyResponse[] responseBody = restClient.get()
@@ -77,6 +83,12 @@ public class PremiumThirdPartyClient
         {
             log.warn("Premium third-party provider call failed", exception);
             throw new ThirdPartyServiceException(exception, VerificationSource.PREMIUM);
+        }
+        finally
+        {
+            sample.stop(Timer.builder("third.party.request.duration")
+                    .tag("provider", "premium")
+                    .register(meterRegistry));
         }
     }
 }
