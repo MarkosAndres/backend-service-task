@@ -52,6 +52,7 @@ public class PremiumThirdPartyClient
             throws ThirdPartyServiceException
     {
         log.info("Calling premium third-party provider");
+        applicationMetrics.thirdPartyRequestCalled(VerificationSource.PREMIUM);
         try
         {
             return applicationMetrics.timeThirdPartyRequest(VerificationSource.PREMIUM, () ->
@@ -83,6 +84,7 @@ public class PremiumThirdPartyClient
         catch (Exception exception)
         {
             log.warn("Premium third-party provider call failed", exception);
+            applicationMetrics.thirdPartyRequestFailed(VerificationSource.PREMIUM);
             throw new ThirdPartyServiceException(exception, VerificationSource.PREMIUM);
         }
     }

@@ -35,6 +35,8 @@ public class BackendService
 
     public BackendResponse search(UUID verificationId, String query)
     {
+        applicationMetrics.backendSearchCalled();
+
         return applicationMetrics.timeBackendSearch(
                 () -> searchInternal(verificationId, query)
         );
@@ -101,6 +103,8 @@ public class BackendService
             Instant requestTimestamp)
     {
         log.info("All third party services failed");
+        applicationMetrics.backendSearchFailed();
+
         BackendResponse response = new BackendResponse(
                 verificationId,
                 query,

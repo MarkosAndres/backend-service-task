@@ -19,7 +19,6 @@ public class ApplicationMetrics
         this.meterRegistry = meterRegistry;
     }
 
-    // HOW MANY CALLS TO store VERIFICATIONS
     public void verificationCompleted(VerificationSource source, String outcome)
     {
         meterRegistry
@@ -32,7 +31,6 @@ public class ApplicationMetrics
                 .increment();
     }
 
-    // TIME FOR FREE AND PREMIUM CLIENTS TO COMPLETE CALL TO EXTERNAL SERVICE
     public <T> T timeThirdPartyRequest(VerificationSource source, Callable<T> operation)
             throws Exception
     {
@@ -42,10 +40,44 @@ public class ApplicationMetrics
                 .recordCallable(operation);
     }
 
+    public void thirdPartyRequestFailed(VerificationSource source)
+    {
+        meterRegistry.counter(
+                        "third.party.request.failures",
+                        "provider", source.name().toLowerCase(Locale.ROOT))
+                .increment();
+    }
+
+    public void thirdPartyRequestCalled(VerificationSource source)
+    {
+        meterRegistry.counter(
+                        "third.party.request.calls",
+                        "provider", source.name().toLowerCase(Locale.ROOT))
+                .increment();
+    }
+
+    public void thirdPartyFallbackCalled(VerificationSource source)
+    {
+        meterRegistry.counter(
+                        "third.party.fallback.calls",
+                        "provider", source.name().toLowerCase(Locale.ROOT))
+                .increment();
+    }
+
     public <T> T timeBackendSearch(Supplier<T> operation)
     {
         return Timer.builder("backend.search.duration")
                 .register(meterRegistry)
                 .record(operation);
+    }
+
+    public void backendSearchCalled()
+    {
+        meterRegistry.counter("backend.search.calls").increment();
+    }
+
+    public void backendSearchFailed()
+    {
+        meterRegistry.counter("backend.search.failures").increment();
     }
 }

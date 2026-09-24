@@ -58,6 +58,7 @@ public class FreeThirdPartyClient
             throws ThirdPartyServiceException
     {
         log.info("Calling free third-party provider");
+        applicationMetrics.thirdPartyRequestCalled(VerificationSource.FREE);
         try
         {
             return applicationMetrics.timeThirdPartyRequest(VerificationSource.FREE, () ->
@@ -90,6 +91,7 @@ public class FreeThirdPartyClient
         catch (Exception exception)
         {
             log.warn("Free third-party provider call failed", exception);
+            applicationMetrics.thirdPartyRequestFailed(VerificationSource.FREE);
             throw new ThirdPartyServiceException(exception, VerificationSource.FREE);
         }
     }
@@ -98,6 +100,7 @@ public class FreeThirdPartyClient
             throws ThirdPartyServiceException
     {
         log.warn("Free circuit breaker denied the call; using Premium fallback", exception);
+        applicationMetrics.thirdPartyFallbackCalled(VerificationSource.FREE);
         return premiumThirdPartyClient.findResults(query);
     }
 }
