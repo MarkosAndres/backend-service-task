@@ -7,6 +7,7 @@ import com.marcos.incode_home_task.dto.SearchResult;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
 import com.marcos.incode_home_task.dto.ThirdPartySearchResult;
 import com.marcos.incode_home_task.metrics.ApplicationMetrics;
+import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +36,9 @@ public class BackendService
     }
 
     @Timed(value = "backend.search.duration")
+    @Counted(value = "backend.search.calls")
     public BackendResponse search(UUID verificationId, String query)
     {
-        applicationMetrics.backendSearchCalled();
         Instant requestTimestamp = Instant.now();
         log.info("Searching companies");
 

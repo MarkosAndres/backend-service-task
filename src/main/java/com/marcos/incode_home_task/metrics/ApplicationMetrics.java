@@ -52,11 +52,6 @@ public class ApplicationMetrics
                 .increment();
     }
 
-    public void backendSearchCalled()
-    {
-        meterRegistry.counter("backend.search.calls").increment();
-    }
-
     public void backendSearchFailed()
     {
         meterRegistry.counter("backend.search.failures").increment();
