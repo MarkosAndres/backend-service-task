@@ -3,6 +3,9 @@ package com.marcos.incode_home_task.service;
 import com.marcos.incode_home_task.company.Company;
 import com.marcos.incode_home_task.dto.PremiumCompanyResponse;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
+import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
+import com.marcos.incode_home_task.verification.VerificationSource;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +29,8 @@ public class PremiumThirdPartyClient
                 .build();
     }
 
-    public List<Company> findResults(String query)
+    @CircuitBreaker(name = "premiumThirdParty", fallbackMethod = "returnNoResults")
+    public ThirdPartySearchResult findResults(String query)
             throws ThirdPartyServiceException
     {
         log.info("Calling premium third-party provider: query={}", query);
@@ -53,12 +57,17 @@ public class PremiumThirdPartyClient
                     .filter(Company::active)
                     .toList();
             log.info("Premium third-party provider returned results: query={}, resultCount={}", query, companies.size());
-            return companies;
+            return new ThirdPartySearchResult(companies, VerificationSource.PREMIUM);
         }
         catch (Exception exception)
         {
             log.warn("Premium third-party provider call failed: query={}", query, exception);
             throw new ThirdPartyServiceException(exception);
         }
+    }
+
+    public ThirdPartySearchResult returnNoResults(String query, Throwable exception)
+    {
+        return new ThirdPartySearchResult(List.of(), VerificationSource.PREMIUM);
     }
 }

@@ -1,6 +1,7 @@
 package com.marcos.incode_home_task.controller;
 
 import com.marcos.incode_home_task.dto.BackendResponse;
+import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
 import com.marcos.incode_home_task.service.BackendService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ public class BackendServiceController
     @GetMapping("/backend-service")
     public BackendResponse search(
             @RequestParam UUID verificationId,
-            @RequestParam String query)
+            @RequestParam String query) throws ThirdPartyServiceException
     {
         log.info("Received backend search request: verificationId={}, query={}", verificationId, query);
         BackendResponse response = backendService.search(verificationId, query);

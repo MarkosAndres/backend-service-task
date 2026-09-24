@@ -4,6 +4,7 @@ import com.marcos.incode_home_task.company.Company;
 import com.marcos.incode_home_task.dto.BackendResponse;
 import com.marcos.incode_home_task.dto.CompanyResponse;
 import com.marcos.incode_home_task.dto.SearchResult;
+import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
 import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public class BackendService
     }
 
     public BackendResponse search(UUID verificationId, String query)
+            throws ThirdPartyServiceException
     {
         Instant requestTimestamp = Instant.now();
         log.info("Searching companies: verificationId={}, query={}", verificationId, query);
