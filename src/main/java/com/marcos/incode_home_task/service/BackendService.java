@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -30,42 +30,72 @@ public class BackendService
     }
 
     public BackendResponse search(UUID verificationId, String query)
-            throws ThirdPartyServiceException
     {
         Instant requestTimestamp = Instant.now();
         log.info("Searching companies: verificationId={}, query={}", verificationId, query);
-        ThirdPartySearchResult thirdPartyResult = thirdPartyService.findCompanies(query);
-        List<Company> companiesFound = thirdPartyResult.companies();
 
-        if (companiesFound.isEmpty())
+        try
         {
-            log.info("No active companies found: verificationId={}, query={}", verificationId, query);
+            ThirdPartySearchResult thirdPartyResult = thirdPartyService.findCompanies(query);
+            List<Company> companiesFound = thirdPartyResult.companies();
+
+            if (companiesFound.isEmpty())
+            {
+                return this.emptyResponse(thirdPartyResult, verificationId, query, requestTimestamp);
+            }
+
+            log.info("Found active companies: verificationId={}, query={}, resultCount={}",
+                    verificationId, query, companiesFound.size());
+
+            Company firstCompanyResult = companiesFound.getFirst();
+            List<CompanyResponse> otherResults = companiesFound
+                    .subList(1, companiesFound.size())
+                    .stream()
+                    .map(CompanyResponse::from)
+                    .toList();
+
             BackendResponse response = new BackendResponse(
                     verificationId,
                     query,
-                    SearchResult.noResults());
+                    SearchResult.found(
+                            CompanyResponse.from(firstCompanyResult),
+                            otherResults));
             verificationService.store(response, thirdPartyResult.source(), requestTimestamp);
             return response;
         }
+        catch (ThirdPartyServiceException thirdPartyServiceException)
+        {
+            return unavailableServices(
+                    thirdPartyServiceException,
+                    verificationId,
+                    query,
+                    requestTimestamp);
+        }
+    }
 
-        log.info("Found active companies: verificationId={}, query={}, resultCount={}",
-                verificationId, query, companiesFound.size());
-
-        Company firstCompanyResult = companiesFound.getFirst();
-        List<CompanyResponse> otherResults = companiesFound
-                .subList(1, companiesFound.size())
-                .stream()
-                .map(CompanyResponse::from)
-                .toList();
-
+    private BackendResponse emptyResponse(ThirdPartySearchResult thirdPartyResult, UUID verificationId, String query, Instant requestTimestamp)
+    {
+        log.info("No active companies found: verificationId={}, query={}", verificationId, query);
         BackendResponse response = new BackendResponse(
                 verificationId,
                 query,
-                SearchResult.found(
-                        CompanyResponse.from(firstCompanyResult),
-                        otherResults));
+                SearchResult.noResults());
         verificationService.store(response, thirdPartyResult.source(), requestTimestamp);
         return response;
     }
 
+    private BackendResponse unavailableServices(
+            ThirdPartyServiceException thirdPartyServiceException,
+            UUID verificationId,
+            String query,
+            Instant requestTimestamp)
+    {
+        log.info("All third party services failed: verificationId={}, query={}", verificationId, query);
+        BackendResponse response = new BackendResponse(
+                verificationId,
+                query,
+                SearchResult.unavailable());
+        verificationService.store(response, thirdPartyServiceException.source(), requestTimestamp);
+        return response;
+    }
 }

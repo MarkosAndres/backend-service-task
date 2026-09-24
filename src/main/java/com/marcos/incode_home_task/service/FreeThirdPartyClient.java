@@ -67,7 +67,7 @@ public class FreeThirdPartyClient
         catch (Exception exception)
         {
             log.warn("Free third-party provider call failed: query={}", query, exception);
-            throw new ThirdPartyServiceException(exception);
+            throw new ThirdPartyServiceException(exception, VerificationSource.FREE);
         }
     }
 

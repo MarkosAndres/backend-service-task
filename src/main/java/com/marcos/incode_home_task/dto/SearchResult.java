@@ -9,16 +9,19 @@ public record SearchResult(String status, CompanyResponse company, List<CompanyR
 {
     public static SearchResult found(CompanyResponse company, List<CompanyResponse> otherResults)
     {
-        return new SearchResult(
-                "FOUND",
-                company,
-                otherResults.isEmpty()
-                        ? null
-                        : otherResults);
+        var otherCompanies = otherResults.isEmpty()
+                ? null
+                : otherResults;
+        return new SearchResult("FOUND", company, otherCompanies);
     }
 
     public static SearchResult noResults()
     {
         return new SearchResult("NO_RESULTS", null, null);
+    }
+
+    public static SearchResult unavailable()
+    {
+        return new SearchResult("THIRD_PARTIES_UNAVAILABLE", null, null);
     }
 }

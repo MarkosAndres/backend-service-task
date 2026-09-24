@@ -23,7 +23,8 @@ public class ThirdPartyService
         this.premiumThirdPartyClient = premiumThirdPartyClient;
     }
 
-    public ThirdPartySearchResult findCompanies(String query) throws ThirdPartyServiceException
+    public ThirdPartySearchResult findCompanies(String query)
+            throws ThirdPartyServiceException
     {
         ThirdPartySearchResult searchResult = freeThirdPartyClient.findResults(query);
 
