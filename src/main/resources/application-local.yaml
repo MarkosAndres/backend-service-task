@@ -19,3 +19,7 @@ management:
     export:
       otlp:
         enabled: false
+  otlp:
+    metrics:
+      export:
+        enabled: false
