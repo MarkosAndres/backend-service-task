@@ -1,14 +1,13 @@
 package com.marcos.incode_home_task.service;
 
-import com.marcos.incode_home_task.company.Company;
+import com.marcos.incode_home_task.dto.Company;
 import com.marcos.incode_home_task.config.VerificationContext;
 import com.marcos.incode_home_task.dto.FreeCompanyResponse;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
-import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
-import com.marcos.incode_home_task.verification.VerificationSource;
+import com.marcos.incode_home_task.metrics.ApplicationMetrics;
+import com.marcos.incode_home_task.dto.ThirdPartySearchResult;
+import com.marcos.incode_home_task.dto.VerificationSource;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -26,12 +25,12 @@ public class FreeThirdPartyClient
 
     private final RestClient restClient;
     private final PremiumThirdPartyClient premiumThirdPartyClient;
-    private final MeterRegistry meterRegistry;
+    private final ApplicationMetrics applicationMetrics;
 
     public FreeThirdPartyClient(
             @Value("${third-party.base-url}") String thirdPartyBaseUrl,
             PremiumThirdPartyClient premiumThirdPartyClient,
-            MeterRegistry meterRegistry)
+            ApplicationMetrics applicationMetrics)
     {
         restClient = RestClient.builder()
                 .baseUrl(thirdPartyBaseUrl)
@@ -51,7 +50,7 @@ public class FreeThirdPartyClient
                 })
                 .build();
         this.premiumThirdPartyClient = premiumThirdPartyClient;
-        this.meterRegistry = meterRegistry;
+        this.applicationMetrics = applicationMetrics;
     }
 
     @CircuitBreaker(name = "freeThirdParty", fallbackMethod = "findResultsFromPremium")
@@ -59,48 +58,46 @@ public class FreeThirdPartyClient
             throws ThirdPartyServiceException
     {
         log.info("Calling free third-party provider");
-        Timer.Sample sample = Timer.start(meterRegistry);
         try
         {
-            FreeCompanyResponse[] responseBody = restClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/free-third-party")
-                            .queryParam("query", query)
-                            .build())
-                    .retrieve()
-                    .body(FreeCompanyResponse[].class);
+            return applicationMetrics.timeThirdPartyRequest(VerificationSource.FREE, () ->
+            {
+                FreeCompanyResponse[] responseBody = restClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/free-third-party")
+                                .queryParam("query", query)
+                                .build())
+                        .retrieve()
+                        .body(FreeCompanyResponse[].class);
 
-            List<Company> companies = (responseBody == null)
-                    ? List.of()
-                    : Arrays.stream(responseBody)
-                    .map(response ->
-                            new Company(
-                                    response.cin(),
-                                    response.name(),
-                                    response.registration_date(),
-                                    response.address(),
-                                    response.is_active()))
-                    .filter(Company::active)
-                    .toList();
+                List<Company> companies = (responseBody == null)
+                        ? List.of()
+                        : Arrays.stream(responseBody)
+                        .map(response ->
+                                new Company(
+                                        response.cin(),
+                                        response.name(),
+                                        response.registration_date(),
+                                        response.address(),
+                                        response.is_active()))
+                        .filter(Company::active)
+                        .toList();
 
-            log.info("Free third-party provider returned results: resultCount={}", companies.size());
-            return new ThirdPartySearchResult(companies, VerificationSource.FREE);
+                log.info("Free third-party provider returned results: resultCount={}", companies.size());
+                return new ThirdPartySearchResult(companies, VerificationSource.FREE);
+            });
         }
         catch (Exception exception)
         {
             log.warn("Free third-party provider call failed", exception);
             throw new ThirdPartyServiceException(exception, VerificationSource.FREE);
         }
-        finally
-        {
-            sample.stop(Timer.builder("third.party.request.duration")
-                    .tag("provider", "free")
-                    .register(meterRegistry));
-        }
     }
 
-    public ThirdPartySearchResult findResultsFromPremium(String query, Throwable exception) throws ThirdPartyServiceException
+    public ThirdPartySearchResult findResultsFromPremium(String query, Throwable exception)
+            throws ThirdPartyServiceException
     {
+        log.warn("Free circuit breaker denied the call; using Premium fallback", exception);
         return premiumThirdPartyClient.findResults(query);
     }
 }

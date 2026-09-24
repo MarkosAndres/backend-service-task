@@ -1,6 +1,6 @@
 package com.marcos.incode_home_task.exception;
 
-import com.marcos.incode_home_task.verification.VerificationSource;
+import com.marcos.incode_home_task.dto.VerificationSource;
 
 public class ThirdPartyServiceException extends Exception
 {

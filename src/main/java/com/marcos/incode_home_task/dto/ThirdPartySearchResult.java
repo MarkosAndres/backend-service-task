@@ -1,6 +1,4 @@
-package com.marcos.incode_home_task.verification;
-
-import com.marcos.incode_home_task.company.Company;
+package com.marcos.incode_home_task.dto;
 
 import java.util.List;
 

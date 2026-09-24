@@ -1,6 +1,5 @@
 package com.marcos.incode_home_task.service;
 
-import com.marcos.incode_home_task.company.CompanyService;
 import com.marcos.incode_home_task.dto.FreeCompanyResponse;
 import com.marcos.incode_home_task.exception.FreeServiceUnavailableException;
 import org.slf4j.Logger;
@@ -24,7 +23,7 @@ public class FreeThirdPartyService
 
     public List<FreeCompanyResponse> search(String query)
     {
-        if (ThreadLocalRandom.current().nextInt(10) < 4)
+        if (ThreadLocalRandom.current().nextInt(5) < 4)
         {
             log.warn("Free provider is unavailable");
             throw new FreeServiceUnavailableException();

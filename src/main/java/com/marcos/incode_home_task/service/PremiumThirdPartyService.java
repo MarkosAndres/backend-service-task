@@ -1,6 +1,5 @@
 package com.marcos.incode_home_task.service;
 
-import com.marcos.incode_home_task.company.CompanyService;
 import com.marcos.incode_home_task.dto.PremiumCompanyResponse;
 import com.marcos.incode_home_task.exception.PremiumServiceUnavailableException;
 import org.slf4j.Logger;

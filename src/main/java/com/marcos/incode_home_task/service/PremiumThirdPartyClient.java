@@ -1,13 +1,12 @@
 package com.marcos.incode_home_task.service;
 
-import com.marcos.incode_home_task.company.Company;
+import com.marcos.incode_home_task.dto.Company;
 import com.marcos.incode_home_task.config.VerificationContext;
 import com.marcos.incode_home_task.dto.PremiumCompanyResponse;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
-import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
-import com.marcos.incode_home_task.verification.VerificationSource;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import com.marcos.incode_home_task.metrics.ApplicationMetrics;
+import com.marcos.incode_home_task.dto.ThirdPartySearchResult;
+import com.marcos.incode_home_task.dto.VerificationSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -24,10 +23,10 @@ public class PremiumThirdPartyClient
     private static final Logger log = LoggerFactory.getLogger(PremiumThirdPartyClient.class);
 
     private final RestClient restClient;
-    private final MeterRegistry meterRegistry;
+    private final ApplicationMetrics applicationMetrics;
 
     public PremiumThirdPartyClient(@Value("${third-party.base-url}") String thirdPartyBaseUrl,
-            MeterRegistry meterRegistry)
+            ApplicationMetrics applicationMetrics)
     {
         restClient = RestClient.builder()
                 .baseUrl(thirdPartyBaseUrl)
@@ -46,49 +45,45 @@ public class PremiumThirdPartyClient
                     return execution.execute(request, body);
                 })
                 .build();
-        this.meterRegistry = meterRegistry;
+        this.applicationMetrics = applicationMetrics;
     }
 
     public ThirdPartySearchResult findResults(String query)
             throws ThirdPartyServiceException
     {
         log.info("Calling premium third-party provider");
-        Timer.Sample sample = Timer.start(meterRegistry);
         try
         {
-            PremiumCompanyResponse[] responseBody = restClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/premium-third-party")
-                            .queryParam("query", query)
-                            .build())
-                    .retrieve()
-                    .body(PremiumCompanyResponse[].class);
+            return applicationMetrics.timeThirdPartyRequest(VerificationSource.PREMIUM, () ->
+            {
+                PremiumCompanyResponse[] responseBody = restClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/premium-third-party")
+                                .queryParam("query", query)
+                                .build())
+                        .retrieve()
+                        .body(PremiumCompanyResponse[].class);
 
-            List<Company> companies = responseBody == null
-                    ? List.of()
-                    : Arrays.stream(responseBody)
-                    .map(response ->
-                            new Company(
-                                    response.companyIdentificationNumber(),
-                                    response.companyName(),
-                                    response.registrationDate(),
-                                    response.companyFullAddress(),
-                                    response.isActive()))
-                    .filter(Company::active)
-                    .toList();
-            log.info("Premium third-party provider returned results: resultCount={}", companies.size());
-            return new ThirdPartySearchResult(companies, VerificationSource.PREMIUM);
+                List<Company> companies = responseBody == null
+                        ? List.of()
+                        : Arrays.stream(responseBody)
+                        .map(response ->
+                                new Company(
+                                        response.companyIdentificationNumber(),
+                                        response.companyName(),
+                                        response.registrationDate(),
+                                        response.companyFullAddress(),
+                                        response.isActive()))
+                        .filter(Company::active)
+                        .toList();
+                log.info("Premium third-party provider returned results: resultCount={}", companies.size());
+                return new ThirdPartySearchResult(companies, VerificationSource.PREMIUM);
+            });
         }
         catch (Exception exception)
         {
             log.warn("Premium third-party provider call failed", exception);
             throw new ThirdPartyServiceException(exception, VerificationSource.PREMIUM);
-        }
-        finally
-        {
-            sample.stop(Timer.builder("third.party.request.duration")
-                    .tag("provider", "premium")
-                    .register(meterRegistry));
         }
     }
 }

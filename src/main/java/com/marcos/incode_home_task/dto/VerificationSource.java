@@ -1,4 +1,4 @@
-package com.marcos.incode_home_task.verification;
+package com.marcos.incode_home_task.dto;
 
 public enum VerificationSource
 {

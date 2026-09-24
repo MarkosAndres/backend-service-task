@@ -1,5 +1,6 @@
-package com.marcos.incode_home_task.verification;
+package com.marcos.incode_home_task.entity;
 
+import com.marcos.incode_home_task.dto.VerificationSource;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

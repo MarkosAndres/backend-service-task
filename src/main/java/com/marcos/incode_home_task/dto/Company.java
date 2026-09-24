@@ -1,4 +1,4 @@
-package com.marcos.incode_home_task.company;
+package com.marcos.incode_home_task.dto;
 
 import java.time.LocalDate;
 

@@ -1,11 +1,11 @@
 package com.marcos.incode_home_task.service;
 
-import com.marcos.incode_home_task.company.Company;
+import com.marcos.incode_home_task.dto.Company;
 import com.marcos.incode_home_task.dto.BackendResponse;
 import com.marcos.incode_home_task.dto.CompanyResponse;
 import com.marcos.incode_home_task.dto.SearchResult;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
-import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
+import com.marcos.incode_home_task.dto.ThirdPartySearchResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

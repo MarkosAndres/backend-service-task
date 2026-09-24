@@ -1,7 +1,8 @@
-package com.marcos.incode_home_task.company;
+package com.marcos.incode_home_task.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marcos.incode_home_task.dto.Company;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 

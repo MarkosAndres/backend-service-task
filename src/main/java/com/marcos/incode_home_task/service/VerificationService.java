@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marcos.incode_home_task.dto.BackendResponse;
 import com.marcos.incode_home_task.dto.VerificationResponse;
-import com.marcos.incode_home_task.verification.VerificationEntity;
-import com.marcos.incode_home_task.verification.VerificationRepository;
-import com.marcos.incode_home_task.verification.VerificationSource;
-import io.micrometer.core.instrument.MeterRegistry;
+import com.marcos.incode_home_task.metrics.ApplicationMetrics;
+import com.marcos.incode_home_task.entity.VerificationEntity;
+import com.marcos.incode_home_task.repository.VerificationRepository;
+import com.marcos.incode_home_task.dto.VerificationSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,14 +25,14 @@ public class VerificationService
 
     private final VerificationRepository verificationRepository;
     private final ObjectMapper objectMapper;
-    private final MeterRegistry meterRegistry;
+    private final ApplicationMetrics applicationMetrics;
 
     public VerificationService(VerificationRepository verificationRepository, ObjectMapper objectMapper,
-            MeterRegistry meterRegistry)
+            ApplicationMetrics applicationMetrics)
     {
         this.verificationRepository = verificationRepository;
         this.objectMapper = objectMapper;
-        this.meterRegistry = meterRegistry;
+        this.applicationMetrics = applicationMetrics;
     }
 
     @Transactional
@@ -47,11 +47,7 @@ public class VerificationService
                 source);
 
         verificationRepository.save(verification);
-        meterRegistry.counter(
-                        "verifications.completed",
-                        "source", source.name(),
-                        "outcome", result.result().status())
-                .increment();
+        applicationMetrics.verificationCompleted(source, result.result().status());
         log.info("Stored verification: source={}, resultStatus={}", source, result.result().status());
     }
 

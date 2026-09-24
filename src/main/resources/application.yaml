@@ -15,10 +15,10 @@ resilience4j:
   circuitbreaker:
     instances:
       freeThirdParty:
-        failureRateThreshold: 50
+        failureRateThreshold: 90
         slidingWindowSize: 4
         minimumNumberOfCalls: 2
-        waitDurationInOpenState: 10s
+        waitDurationInOpenState: 100s
       premiumThirdParty:
         failureRateThreshold: 50
         slidingWindowSize: 4

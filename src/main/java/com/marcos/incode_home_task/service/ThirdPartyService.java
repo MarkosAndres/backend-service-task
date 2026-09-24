@@ -1,8 +1,8 @@
 package com.marcos.incode_home_task.service;
 
-import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
+import com.marcos.incode_home_task.dto.ThirdPartySearchResult;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
-import com.marcos.incode_home_task.verification.VerificationSource;
+import com.marcos.incode_home_task.dto.VerificationSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
