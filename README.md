@@ -80,6 +80,8 @@ The following Actuator endpoints are exposed:
 | `GET /actuator/metrics` | Available metric names |
 | `GET /actuator/metrics/{metricName}` | Details for one metric |
 | `GET /actuator/prometheus` | Prometheus scrape-format metrics |
+| `GET /actuator/logfile` | Current application log file |
+| `GET /actuator/loggers` | Logger levels and logger configuration |
 
 Examples:
 
@@ -88,9 +90,15 @@ curl http://localhost:8080/actuator/health
 curl http://localhost:8080/actuator/metrics
 curl http://localhost:8080/actuator/metrics/backend.search.calls
 curl http://localhost:8080/actuator/prometheus
+curl http://localhost:8080/actuator/logfile
+curl http://localhost:8080/actuator/loggers
 ```
 
 `/actuator/prometheus` is the endpoint a Prometheus-compatible collector should scrape. It includes JVM, HTTP server, cache, and custom application metrics such as `backend.search.calls`, `backend.search.duration`, and third-party-provider counters.
+
+Application logs are written to `logs/incode-home-task.log` as well as the console. The log file is excluded from Git and can be viewed in a browser at `http://localhost:8080/actuator/logfile`.
+
+`/actuator/loggers` shows the active logger levels. It can also change a logger level at runtime; do not expose this endpoint publicly without authentication.
 
 ## Tests
 
