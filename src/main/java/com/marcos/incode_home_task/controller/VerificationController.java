@@ -27,14 +27,14 @@ public class VerificationController
     @GetMapping("/verifications/{verificationId}")
     public ResponseEntity<VerificationResponse> findByVerificationId(@PathVariable UUID verificationId)
     {
-        log.info("Received verification retrieval request: verificationId={}", verificationId);
+        log.info("Received verification retrieval request");
         return verificationService.findByVerificationId(verificationId)
                 .map(response -> {
-                    log.info("Completed verification retrieval request: verificationId={}", verificationId);
+                    log.info("Completed verification retrieval request");
                     return ResponseEntity.ok(response);
                 })
                 .orElseGet(() -> {
-                    log.info("Verification was not found: verificationId={}", verificationId);
+                    log.info("Verification was not found");
                     return ResponseEntity.notFound().build();
                 });
     }

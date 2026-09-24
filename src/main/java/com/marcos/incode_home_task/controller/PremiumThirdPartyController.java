@@ -25,9 +25,9 @@ public class PremiumThirdPartyController
     @GetMapping("/premium-third-party")
     public List<PremiumCompanyResponse> search(@RequestParam String query)
     {
-        log.info("Received premium third-party search request: query={}", query);
+        log.info("Received premium third-party search request");
         List<PremiumCompanyResponse> response = premiumThirdPartyService.search(query);
-        log.info("Completed premium third-party search request: query={}, resultCount={}", query, response.size());
+        log.info("Completed premium third-party search request: resultCount={}", response.size());
         return response;
     }
 }

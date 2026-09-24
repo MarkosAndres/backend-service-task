@@ -26,7 +26,7 @@ public class PremiumThirdPartyService
     {
         if (ThreadLocalRandom.current().nextInt(10) == 0)
         {
-            log.warn("Premium provider is unavailable: query={}", query);
+            log.warn("Premium provider is unavailable");
             throw new PremiumServiceUnavailableException();
         }
 

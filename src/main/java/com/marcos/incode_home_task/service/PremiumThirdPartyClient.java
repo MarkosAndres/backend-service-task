@@ -1,12 +1,14 @@
 package com.marcos.incode_home_task.service;
 
 import com.marcos.incode_home_task.company.Company;
+import com.marcos.incode_home_task.config.VerificationContext;
 import com.marcos.incode_home_task.dto.PremiumCompanyResponse;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
 import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
 import com.marcos.incode_home_task.verification.VerificationSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -25,13 +27,27 @@ public class PremiumThirdPartyClient
     {
         restClient = RestClient.builder()
                 .baseUrl(thirdPartyBaseUrl)
+                .requestInterceptor((request, body, execution) ->
+                {
+                    String verificationId = MDC.get(VerificationContext.MDC_KEY);
+                    if (verificationId != null)
+                    {
+                        request.getHeaders().set(VerificationContext.HEADER_NAME, verificationId);
+                    }
+                    String query = MDC.get(VerificationContext.QUERY_MDC_KEY);
+                    if (query != null)
+                    {
+                        request.getHeaders().set(VerificationContext.QUERY_HEADER_NAME, query);
+                    }
+                    return execution.execute(request, body);
+                })
                 .build();
     }
 
     public ThirdPartySearchResult findResults(String query)
             throws ThirdPartyServiceException
     {
-        log.info("Calling premium third-party provider: query={}", query);
+        log.info("Calling premium third-party provider");
         try
         {
             PremiumCompanyResponse[] responseBody = restClient.get()
@@ -54,12 +70,12 @@ public class PremiumThirdPartyClient
                                     response.isActive()))
                     .filter(Company::active)
                     .toList();
-            log.info("Premium third-party provider returned results: query={}, resultCount={}", query, companies.size());
+            log.info("Premium third-party provider returned results: resultCount={}", companies.size());
             return new ThirdPartySearchResult(companies, VerificationSource.PREMIUM);
         }
         catch (Exception exception)
         {
-            log.warn("Premium third-party provider call failed: query={}", query, exception);
+            log.warn("Premium third-party provider call failed", exception);
             throw new ThirdPartyServiceException(exception, VerificationSource.PREMIUM);
         }
     }

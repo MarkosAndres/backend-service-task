@@ -27,9 +27,9 @@ public class BackendServiceController
             @RequestParam UUID verificationId,
             @RequestParam String query)
     {
-        log.info("Received backend search request: verificationId={}, query={}", verificationId, query);
+        log.info("Received backend search request");
         BackendResponse response = backendService.search(verificationId, query);
-        log.info("Completed backend search request: verificationId={}", verificationId);
+        log.info("Completed backend search request");
         return response;
     }
 }

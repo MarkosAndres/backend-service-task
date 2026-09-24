@@ -26,7 +26,7 @@ public class FreeThirdPartyService
     {
         if (ThreadLocalRandom.current().nextInt(10) < 4)
         {
-            log.warn("Free provider is unavailable: query={}", query);
+            log.warn("Free provider is unavailable");
             throw new FreeServiceUnavailableException();
         }
 
@@ -41,7 +41,7 @@ public class FreeThirdPartyService
                                 company.address(),
                                 company.active()))
                 .toList();
-        log.info("Free provider search completed: query={}, resultCount={}", query, results.size());
+        log.info("Free provider search completed: resultCount={}", results.size());
         return results;
     }
 }

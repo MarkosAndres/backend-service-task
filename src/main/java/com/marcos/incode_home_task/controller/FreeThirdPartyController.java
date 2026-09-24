@@ -25,9 +25,9 @@ public class FreeThirdPartyController
     @GetMapping("/free-third-party")
     public List<FreeCompanyResponse> search(@RequestParam String query)
     {
-        log.info("Received free third-party search request: query={}", query);
+        log.info("Received free third-party search request");
         List<FreeCompanyResponse> response = freeThirdPartyService.search(query);
-        log.info("Completed free third-party search request: query={}, resultCount={}", query, response.size());
+        log.info("Completed free third-party search request: resultCount={}", response.size());
         return response;
     }
 

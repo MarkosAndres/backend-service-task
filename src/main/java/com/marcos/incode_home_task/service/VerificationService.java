@@ -42,13 +42,12 @@ public class VerificationService
                 source);
 
         verificationRepository.save(verification);
-        log.info("Stored verification: verificationId={}, source={}, resultStatus={}",
-                verificationId, source, result.result().status());
+        log.info("Stored verification: source={}, resultStatus={}", source, result.result().status());
     }
 
     public Optional<VerificationResponse> findByVerificationId(UUID verificationId)
     {
-        log.info("Retrieving verification: verificationId={}", verificationId);
+        log.info("Retrieving verification");
         return verificationRepository.findById(verificationId)
                 .map(verification -> new VerificationResponse(
                         verification.getVerificationId(),

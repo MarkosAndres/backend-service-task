@@ -31,12 +31,12 @@ public class ThirdPartyService
         if(VerificationSource.FREE == searchResult.source()
                 && searchResult.companies().isEmpty())
         {
-            log.info("Free provider returned no results; searching premium provider: query={}", query);
+            log.info("Free provider returned no results; searching premium provider");
             searchResult = premiumThirdPartyClient.findResults(query);
         }
 
-        log.info("Third-party search completed: query={}, source={}, activeResultCount={}",
-                query, searchResult.source(), searchResult.companies().size());
+        log.info("Third-party search completed: source={}, activeResultCount={}",
+                searchResult.source(), searchResult.companies().size());
 
         return searchResult;
     }

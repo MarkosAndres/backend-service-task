@@ -32,7 +32,7 @@ public class BackendService
     public BackendResponse search(UUID verificationId, String query)
     {
         Instant requestTimestamp = Instant.now();
-        log.info("Searching companies: verificationId={}, query={}", verificationId, query);
+        log.info("Searching companies");
 
         try
         {
@@ -44,8 +44,7 @@ public class BackendService
                 return this.emptyResponse(thirdPartyResult, verificationId, query, requestTimestamp);
             }
 
-            log.info("Found active companies: verificationId={}, query={}, resultCount={}",
-                    verificationId, query, companiesFound.size());
+            log.info("Found active companies: resultCount={}", companiesFound.size());
 
             Company firstCompanyResult = companiesFound.getFirst();
             List<CompanyResponse> otherResults = companiesFound
@@ -75,7 +74,7 @@ public class BackendService
 
     private BackendResponse emptyResponse(ThirdPartySearchResult thirdPartyResult, UUID verificationId, String query, Instant requestTimestamp)
     {
-        log.info("No active companies found: verificationId={}, query={}", verificationId, query);
+        log.info("No active companies found");
         BackendResponse response = new BackendResponse(
                 verificationId,
                 query,
@@ -90,7 +89,7 @@ public class BackendService
             String query,
             Instant requestTimestamp)
     {
-        log.info("All third party services failed: verificationId={}, query={}", verificationId, query);
+        log.info("All third party services failed");
         BackendResponse response = new BackendResponse(
                 verificationId,
                 query,
