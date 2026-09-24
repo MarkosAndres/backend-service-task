@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 @Component
 public class ApplicationMetrics
@@ -18,20 +19,33 @@ public class ApplicationMetrics
         this.meterRegistry = meterRegistry;
     }
 
+    // HOW MANY CALLS TO store VERIFICATIONS
     public void verificationCompleted(VerificationSource source, String outcome)
     {
-        meterRegistry.counter(
+        meterRegistry
+                .counter(
                         "verifications.completed",
-                        "source", source.name(),
-                        "outcome", outcome)
+                        "source",
+                        source.name(),
+                        "outcome",
+                        outcome)
                 .increment();
     }
 
-    public <T> T timeThirdPartyRequest(VerificationSource source, Callable<T> operation) throws Exception
+    // TIME FOR FREE AND PREMIUM CLIENTS TO COMPLETE CALL TO EXTERNAL SERVICE
+    public <T> T timeThirdPartyRequest(VerificationSource source, Callable<T> operation)
+            throws Exception
     {
         return Timer.builder("third.party.request.duration")
                 .tag("provider", source.name().toLowerCase(Locale.ROOT))
                 .register(meterRegistry)
                 .recordCallable(operation);
+    }
+
+    public <T> T timeBackendSearch(Supplier<T> operation)
+    {
+        return Timer.builder("backend.search.duration")
+                .register(meterRegistry)
+                .record(operation);
     }
 }
