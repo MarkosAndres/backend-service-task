@@ -29,11 +29,12 @@ public class FreeThirdPartyClient
     private final ApplicationMetrics applicationMetrics;
 
     public FreeThirdPartyClient(
+            RestClient.Builder restClientBuilder,
             @Value("${third-party.base-url}") String thirdPartyBaseUrl,
             PremiumThirdPartyClient premiumThirdPartyClient,
             ApplicationMetrics applicationMetrics)
     {
-        restClient = RestClient.builder()
+        restClient = restClientBuilder
                 .baseUrl(thirdPartyBaseUrl)
                 .requestInterceptor((request, body, execution) ->
                 {

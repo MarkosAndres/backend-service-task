@@ -9,7 +9,12 @@ third-party:
 
 logging:
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [verificationId=%X{verificationId:-}, query=%X{query:-}] %logger{36} - %msg%n%ex"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [traceId=%X{traceId:-}, spanId=%X{spanId:-}, verificationId=%X{verificationId:-}, query=%X{query:-}] %logger{36} - %msg%n%ex"
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
 
 resilience4j:
   circuitbreaker:

@@ -26,10 +26,11 @@ public class PremiumThirdPartyClient
     private final RestClient restClient;
     private final ApplicationMetrics applicationMetrics;
 
-    public PremiumThirdPartyClient(@Value("${third-party.base-url}") String thirdPartyBaseUrl,
+    public PremiumThirdPartyClient(RestClient.Builder restClientBuilder,
+            @Value("${third-party.base-url}") String thirdPartyBaseUrl,
             ApplicationMetrics applicationMetrics)
     {
-        restClient = RestClient.builder()
+        restClient = restClientBuilder
                 .baseUrl(thirdPartyBaseUrl)
                 .requestInterceptor((request, body, execution) ->
                 {
