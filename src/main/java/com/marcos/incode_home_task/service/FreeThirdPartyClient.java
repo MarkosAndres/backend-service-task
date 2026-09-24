@@ -2,7 +2,6 @@ package com.marcos.incode_home_task.service;
 
 import com.marcos.incode_home_task.company.Company;
 import com.marcos.incode_home_task.dto.FreeCompanyResponse;
-import com.marcos.incode_home_task.exception.NoRecordsFoundException;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,13 +51,9 @@ public class FreeThirdPartyClient
                                     response.registration_date(),
                                     response.address(),
                                     response.is_active()))
+                    .filter(Company::active)
                     .toList();
 
-            if (companies.isEmpty())
-            {
-                log.info("Free third-party provider returned no records: query={}", query);
-                throw new NoRecordsFoundException();
-            }
             log.info("Free third-party provider returned results: query={}, resultCount={}", query, companies.size());
             return companies;
         }

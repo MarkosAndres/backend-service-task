@@ -50,6 +50,7 @@ public class PremiumThirdPartyClient
                                     response.registrationDate(),
                                     response.companyFullAddress(),
                                     response.isActive()))
+                    .filter(Company::active)
                     .toList();
             log.info("Premium third-party provider returned results: query={}, resultCount={}", query, companies.size());
             return companies;

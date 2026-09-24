@@ -1,6 +1,5 @@
 package com.marcos.incode_home_task.service;
 
-import com.marcos.incode_home_task.company.Company;
 import com.marcos.incode_home_task.verification.ThirdPartySearchResult;
 import com.marcos.incode_home_task.verification.VerificationSource;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -38,6 +37,7 @@ public class ThirdPartyService
     {
         log.info("Searching through free third-party provider: query={}, circuitState={}",
                 query, freeCircuitBreaker.getState());
+
         Supplier<ThirdPartySearchResult> freeSupplier = CircuitBreaker.decorateCheckedSupplier(
                 freeCircuitBreaker,
                 () -> new ThirdPartySearchResult(
@@ -54,12 +54,15 @@ public class ThirdPartyService
                         })
                 .get();
 
-        List<Company> activeCompanies = searchResult.companies().stream()
-                .filter(Company::active)
-                .toList();
+        if(searchResult.companies().isEmpty())
+        {
+            searchResult = this.findCompaniesPremiumService(query);
+        }
+
         log.info("Third-party search completed: query={}, source={}, activeResultCount={}",
-                query, searchResult.source(), activeCompanies.size());
-        return new ThirdPartySearchResult(activeCompanies, searchResult.source());
+                query, searchResult.source(), searchResult.companies().size());
+
+        return searchResult;
     }
 
     private ThirdPartySearchResult findCompaniesPremiumService(String query)

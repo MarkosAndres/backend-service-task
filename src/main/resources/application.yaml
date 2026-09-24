@@ -14,7 +14,7 @@ resilience4j:
         failureRateThreshold: 50
         slidingWindowSize: 4
         minimumNumberOfCalls: 2
-        waitDurationInOpenState: 30s
+        waitDurationInOpenState: 10s
       premiumThirdParty:
         failureRateThreshold: 50
         slidingWindowSize: 4
