@@ -8,6 +8,7 @@ import com.marcos.incode_home_task.metrics.ApplicationMetrics;
 import com.marcos.incode_home_task.dto.ThirdPartySearchResult;
 import com.marcos.incode_home_task.dto.VerificationSource;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -54,6 +55,7 @@ public class FreeThirdPartyClient
     }
 
     @CircuitBreaker(name = "freeThirdParty", fallbackMethod = "findResultsFromPremium")
+    @Timed(value = "third.party.request.duration", extraTags = {"provider", "free"})
     public ThirdPartySearchResult findResults(String query)
             throws ThirdPartyServiceException
     {
@@ -61,32 +63,29 @@ public class FreeThirdPartyClient
         applicationMetrics.thirdPartyRequestCalled(VerificationSource.FREE);
         try
         {
-            return applicationMetrics.timeThirdPartyRequest(VerificationSource.FREE, () ->
-            {
-                FreeCompanyResponse[] responseBody = restClient.get()
-                        .uri(uriBuilder -> uriBuilder
-                                .path("/free-third-party")
-                                .queryParam("query", query)
-                                .build())
-                        .retrieve()
-                        .body(FreeCompanyResponse[].class);
+            FreeCompanyResponse[] responseBody = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/free-third-party")
+                            .queryParam("query", query)
+                            .build())
+                    .retrieve()
+                    .body(FreeCompanyResponse[].class);
 
-                List<Company> companies = (responseBody == null)
-                        ? List.of()
-                        : Arrays.stream(responseBody)
-                        .map(response ->
-                                new Company(
-                                        response.cin(),
-                                        response.name(),
-                                        response.registration_date(),
-                                        response.address(),
-                                        response.is_active()))
-                        .filter(Company::active)
-                        .toList();
+            List<Company> companies = (responseBody == null)
+                    ? List.of()
+                    : Arrays.stream(responseBody)
+                    .map(response ->
+                            new Company(
+                                    response.cin(),
+                                    response.name(),
+                                    response.registration_date(),
+                                    response.address(),
+                                    response.is_active()))
+                    .filter(Company::active)
+                    .toList();
 
-                log.info("Free third-party provider returned results: resultCount={}", companies.size());
-                return new ThirdPartySearchResult(companies, VerificationSource.FREE);
-            });
+            log.info("Free third-party provider returned results: resultCount={}", companies.size());
+            return new ThirdPartySearchResult(companies, VerificationSource.FREE);
         }
         catch (Exception exception)
         {

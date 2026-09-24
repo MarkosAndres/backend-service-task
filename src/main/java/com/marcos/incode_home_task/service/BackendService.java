@@ -7,6 +7,7 @@ import com.marcos.incode_home_task.dto.SearchResult;
 import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
 import com.marcos.incode_home_task.dto.ThirdPartySearchResult;
 import com.marcos.incode_home_task.metrics.ApplicationMetrics;
+import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,17 +34,10 @@ public class BackendService
         this.applicationMetrics = applicationMetrics;
     }
 
+    @Timed(value = "backend.search.duration")
     public BackendResponse search(UUID verificationId, String query)
     {
         applicationMetrics.backendSearchCalled();
-
-        return applicationMetrics.timeBackendSearch(
-                () -> searchInternal(verificationId, query)
-        );
-    }
-
-    private BackendResponse searchInternal(UUID verificationId, String query)
-    {
         Instant requestTimestamp = Instant.now();
         log.info("Searching companies");
 

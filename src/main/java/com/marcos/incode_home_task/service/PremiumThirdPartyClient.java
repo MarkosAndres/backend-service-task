@@ -7,6 +7,7 @@ import com.marcos.incode_home_task.exception.ThirdPartyServiceException;
 import com.marcos.incode_home_task.metrics.ApplicationMetrics;
 import com.marcos.incode_home_task.dto.ThirdPartySearchResult;
 import com.marcos.incode_home_task.dto.VerificationSource;
+import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -48,6 +49,7 @@ public class PremiumThirdPartyClient
         this.applicationMetrics = applicationMetrics;
     }
 
+    @Timed(value = "third.party.request.duration", extraTags = {"provider", "premium"})
     public ThirdPartySearchResult findResults(String query)
             throws ThirdPartyServiceException
     {
@@ -55,31 +57,28 @@ public class PremiumThirdPartyClient
         applicationMetrics.thirdPartyRequestCalled(VerificationSource.PREMIUM);
         try
         {
-            return applicationMetrics.timeThirdPartyRequest(VerificationSource.PREMIUM, () ->
-            {
-                PremiumCompanyResponse[] responseBody = restClient.get()
-                        .uri(uriBuilder -> uriBuilder
-                                .path("/premium-third-party")
-                                .queryParam("query", query)
-                                .build())
-                        .retrieve()
-                        .body(PremiumCompanyResponse[].class);
+            PremiumCompanyResponse[] responseBody = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/premium-third-party")
+                            .queryParam("query", query)
+                            .build())
+                    .retrieve()
+                    .body(PremiumCompanyResponse[].class);
 
-                List<Company> companies = responseBody == null
-                        ? List.of()
-                        : Arrays.stream(responseBody)
-                        .map(response ->
-                                new Company(
-                                        response.companyIdentificationNumber(),
-                                        response.companyName(),
-                                        response.registrationDate(),
-                                        response.companyFullAddress(),
-                                        response.isActive()))
-                        .filter(Company::active)
-                        .toList();
-                log.info("Premium third-party provider returned results: resultCount={}", companies.size());
-                return new ThirdPartySearchResult(companies, VerificationSource.PREMIUM);
-            });
+            List<Company> companies = responseBody == null
+                    ? List.of()
+                    : Arrays.stream(responseBody)
+                    .map(response ->
+                            new Company(
+                                    response.companyIdentificationNumber(),
+                                    response.companyName(),
+                                    response.registrationDate(),
+                                    response.companyFullAddress(),
+                                    response.isActive()))
+                    .filter(Company::active)
+                    .toList();
+            log.info("Premium third-party provider returned results: resultCount={}", companies.size());
+            return new ThirdPartySearchResult(companies, VerificationSource.PREMIUM);
         }
         catch (Exception exception)
         {
