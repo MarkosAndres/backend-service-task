@@ -1,6 +1,10 @@
 spring:
   application:
     name: incode-home-task
+  cache:
+    cache-names: verificationById
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=30m
   profiles:
     default: local
 

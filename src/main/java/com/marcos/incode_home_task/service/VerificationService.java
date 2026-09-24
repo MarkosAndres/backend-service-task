@@ -10,6 +10,8 @@ import com.marcos.incode_home_task.repository.VerificationRepository;
 import com.marcos.incode_home_task.dto.VerificationSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,7 @@ public class VerificationService
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "verificationById", key = "#result.verificationId()")
     public void store(BackendResponse result, VerificationSource source, Instant timestamp)
     {
         UUID verificationId = result.verificationId();
@@ -51,6 +54,7 @@ public class VerificationService
         log.info("Stored verification: source={}, resultStatus={}", source, result.result().status());
     }
 
+    @Cacheable(cacheNames = "verificationById", key = "#verificationId")
     public Optional<VerificationResponse> findByVerificationId(UUID verificationId)
     {
         log.info("Retrieving verification");
