@@ -1,6 +1,11 @@
 spring:
   application:
     name: incode-home-task
+  security:
+    user:
+      name: ${VERIFICATIONS_USERNAME:verification-reader}
+      password: ${VERIFICATIONS_PASSWORD:changeit}
+      roles: VERIFICATION_READER
   cache:
     cache-names: verificationById
     caffeine:

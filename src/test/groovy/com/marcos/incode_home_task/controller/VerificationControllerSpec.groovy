@@ -1,12 +1,14 @@
 package com.marcos.incode_home_task.controller
 
 import com.marcos.incode_home_task.dto.*
+import com.marcos.incode_home_task.config.SecurityConfiguration
 import com.marcos.incode_home_task.service.VerificationService
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.context.annotation.Import
 import spock.lang.Specification
 
 import java.time.Instant
@@ -14,9 +16,10 @@ import java.util.UUID
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic
 
 @WebMvcTest(controllers = VerificationController)
-@AutoConfigureMockMvc(addFilters = false)
+@Import(SecurityConfiguration)
 class VerificationControllerSpec extends Specification
 {
     @Autowired MockMvc mvc
@@ -51,6 +54,14 @@ class VerificationControllerSpec extends Specification
         verificationService.findAll() >> []
 
         expect:
-        mvc.perform(get('/verifications')).andExpect(status().isOk()).andExpect(content().json('[]'))
+        mvc.perform(get('/verifications').with(httpBasic('verification-reader', 'changeit')))
+                .andExpect(status().isOk())
+                .andExpect(content().json('[]'))
+    }
+
+    def 'requires HTTP Basic authentication when retrieving all verifications'()
+    {
+        expect:
+        mvc.perform(get('/verifications')).andExpect(status().isUnauthorized())
     }
 }

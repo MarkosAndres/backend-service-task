@@ -100,6 +100,23 @@ Application logs are written to `logs/incode-home-task.log` as well as the conso
 
 `/actuator/loggers` shows the active logger levels. It can also change a logger level at runtime; do not expose this endpoint publicly without authentication.
 
+## Verification endpoint authentication
+
+Only `GET /verifications` requires HTTP Basic authentication. All other API endpoints, including `GET /verifications/{verificationId}`, remain public.
+
+The local defaults are:
+
+```text
+Username: verification-reader
+Password: changeit
+```
+
+Override them with `VERIFICATIONS_USERNAME` and `VERIFICATIONS_PASSWORD` before starting the application. For example:
+
+```bash
+curl -u verification-reader:changeit http://localhost:8080/verifications
+```
+
 ## Tests
 
 Run the complete test suite with:
