@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/incode_home_task}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
+    username: ${DATABASE_USERNAME:hometask}
+    password: ${DATABASE_PASSWORD:mypass321}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
