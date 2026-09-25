@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class FreeThirdPartyService
@@ -15,15 +14,17 @@ public class FreeThirdPartyService
     private static final Logger log = LoggerFactory.getLogger(FreeThirdPartyService.class);
 
     private final CompanyService companyService;
+    private final ProviderFailureSimulator failureSimulator;
 
-    public FreeThirdPartyService(CompanyService companyService)
+    public FreeThirdPartyService(CompanyService companyService, ProviderFailureSimulator failureSimulator)
     {
         this.companyService = companyService;
+        this.failureSimulator = failureSimulator;
     }
 
     public List<FreeCompanyResponse> search(String query)
     {
-        if (ThreadLocalRandom.current().nextInt(5) < 4)
+        if (failureSimulator.isUnavailable(40))
         {
             log.warn("Free provider is unavailable");
             throw new FreeServiceUnavailableException();

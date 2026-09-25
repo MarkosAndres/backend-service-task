@@ -1,6 +1,7 @@
 package com.marcos.incode_home_task.controller
 
 import com.marcos.incode_home_task.dto.FreeCompanyResponse
+import com.marcos.incode_home_task.exception.FreeServiceUnavailableException
 import com.marcos.incode_home_task.service.FreeThirdPartyService
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,5 +39,18 @@ class FreeThirdPartyControllerSpec extends Specification
     {
         expect:
         mvc.perform(get('/free-third-party')).andExpect(status().isBadRequest())
+    }
+
+    def 'returns 503 when the free provider is unavailable'()
+    {
+        given:
+        freeThirdPartyService.search('acme') >>
+                { throw new FreeServiceUnavailableException() }
+
+        expect:
+        mvc.perform(
+                get('/free-third-party')
+                        .param('query', 'acme'))
+                .andExpect(status().isServiceUnavailable())
     }
 }

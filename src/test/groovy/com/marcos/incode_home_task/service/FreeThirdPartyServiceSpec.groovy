@@ -1,6 +1,7 @@
 package com.marcos.incode_home_task.service
 
 import com.marcos.incode_home_task.dto.Company
+import com.marcos.incode_home_task.exception.FreeServiceUnavailableException
 import spock.lang.Specification
 
 import java.time.LocalDate
@@ -8,7 +9,8 @@ import java.time.LocalDate
 class FreeThirdPartyServiceSpec extends Specification
 {
     def companyService = Mock(CompanyService)
-    def freeThirdPartyService = new FreeThirdPartyService(companyService)
+    def failureSimulator = Mock(ProviderFailureSimulator)
+    def freeThirdPartyService = new FreeThirdPartyService(companyService, failureSimulator)
 
     def 'maps catalog company to free response when provider is available'()
     {
@@ -17,25 +19,24 @@ class FreeThirdPartyServiceSpec extends Specification
                 [new Company('1', 'Acme', LocalDate.of(2020, 1, 1), 'A', true)]
 
         when:
-        def response = eventually { freeThirdPartyService.search('acme') }
+        def response = freeThirdPartyService.search('acme')
 
         then:
         response*.cin() == ['1']
         response*.is_active() == [true]
+        1 * failureSimulator.isUnavailable(40) >> false
     }
 
-    private static <T> T eventually(Closure<T> action)
+    def 'returns unavailable when the free provider failure is simulated'()
     {
-        for (int attempt = 0; attempt < 100; attempt++)
-        {
-            try
-            {
-                return action.call()
-            }
-            catch (RuntimeException ignored)
-            {
-            }
-        }
-        throw new AssertionError('Free provider was unavailable in every attempt')
+        given:
+        failureSimulator.isUnavailable(40) >> true
+
+        when:
+        freeThirdPartyService.search('acme')
+
+        then:
+        thrown(FreeServiceUnavailableException)
+        0 * companyService._
     }
 }

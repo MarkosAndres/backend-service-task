@@ -1,6 +1,7 @@
 package com.marcos.incode_home_task.controller
 
 import com.marcos.incode_home_task.dto.PremiumCompanyResponse
+import com.marcos.incode_home_task.exception.PremiumServiceUnavailableException
 import com.marcos.incode_home_task.service.PremiumThirdPartyService
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,5 +32,18 @@ class PremiumThirdPartyControllerSpec extends Specification
         mvc.perform(get('/premium-third-party').param('query', 'acme'))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath('$[0].companyName').value('Acme'))
+    }
+
+    def 'returns 503 when the premium provider is unavailable'()
+    {
+        given:
+        premiumThirdPartyService.search('acme') >>
+                { throw new PremiumServiceUnavailableException() }
+
+        expect:
+        mvc.perform(
+                get('/premium-third-party')
+                        .param('query', 'acme'))
+                .andExpect(status().isServiceUnavailable())
     }
 }

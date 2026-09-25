@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class PremiumThirdPartyService
@@ -15,15 +14,17 @@ public class PremiumThirdPartyService
     private static final Logger log = LoggerFactory.getLogger(PremiumThirdPartyService.class);
 
     private final CompanyService companyService;
+    private final ProviderFailureSimulator failureSimulator;
 
-    public PremiumThirdPartyService(CompanyService companyService)
+    public PremiumThirdPartyService(CompanyService companyService, ProviderFailureSimulator failureSimulator)
     {
         this.companyService = companyService;
+        this.failureSimulator = failureSimulator;
     }
 
     public List<PremiumCompanyResponse> search(String query)
     {
-        if (ThreadLocalRandom.current().nextInt(10) == 0)
+        if (failureSimulator.isUnavailable(10))
         {
             log.warn("Premium provider is unavailable");
             throw new PremiumServiceUnavailableException();
