@@ -15,3 +15,7 @@ management:
     export:
       otlp:
         enabled: ${OTLP_TRACING_ENABLED:false}
+  otlp:
+    metrics:
+      export:
+        enabled: ${OTLP_METRICS_ENABLED:false}

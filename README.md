@@ -52,7 +52,7 @@ export DATABASE_PASSWORD='postgres'
 ./gradlew bootRun --args='--spring.profiles.active=database'
 ```
 
-The defaults above are used when the environment variables are omitted. To enable OTLP trace export in this profile, set `OTLP_TRACING_ENABLED=true` and configure the appropriate OTLP endpoint for your telemetry backend.
+The defaults above are used when the environment variables are omitted. OTLP trace and metrics export are disabled by default; set `OTLP_TRACING_ENABLED=true` and/or `OTLP_METRICS_ENABLED=true` when an OTLP receiver is configured.
 
 ## Swagger and OpenAPI
 
