@@ -1,6 +1,6 @@
 # Incode Home Task
 
-Spring Boot application for company searches and verification retrieval. It includes H2 and PostgreSQL profiles, OpenAPI documentation, Actuator endpoints, Prometheus metrics, Caffeine caching, and OpenTelemetry tracing support.
+Spring Boot application for company searches and verification retrieval. It includes H2 and PostgreSQL profiles, OpenAPI documentation, Actuator endpoints, Prometheus metrics, Caffeine caching, and OpenTelemetry Protocol (OTLP) trace and metric export.
 
 ## Prerequisites
 
@@ -42,17 +42,36 @@ Password: leave empty
 
 The `database` profile uses PostgreSQL and runs Flyway migrations on startup.
 
-Set the connection details, then start the app:
+Create a PostgreSQL database and a role that has access to it, then set the connection details and start the app. The following values match the application's defaults (set the role password to `mypass321` when creating it):
 
 ```bash
 export DATABASE_URL='jdbc:postgresql://localhost:5432/incode_home_task'
-export DATABASE_USERNAME='postgres'
-export DATABASE_PASSWORD='postgres'
+export DATABASE_USERNAME='hometask'
+export DATABASE_PASSWORD='mypass321'
 
 ./gradlew bootRun --args='--spring.profiles.active=database'
 ```
 
-The defaults above are used when the environment variables are omitted. OTLP trace and metrics export are disabled by default; set `OTLP_TRACING_ENABLED=true` and/or `OTLP_METRICS_ENABLED=true` when an OTLP receiver is configured.
+`DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` default to `jdbc:postgresql://localhost:5432/incode_home_task`, `hometask`, and `mypass321`, respectively. The configured PostgreSQL JDBC driver, Flyway PostgreSQL support, and `TIMESTAMP WITH TIME ZONE` migration are compatible with PostgreSQL.
+
+### OTLP export
+
+OTLP trace and metric export are disabled in both profiles by default. The Spring Boot 4.1 configuration names used by this project are current:
+
+- `management.tracing.export.otlp.enabled` for trace-export enablement
+- `management.otlp.metrics.export.enabled` for metrics-export enablement
+
+Enable the exporters only when an OTLP collector is available, and provide its HTTP endpoints. For a collector listening on the conventional OTLP/HTTP port, for example:
+
+```bash
+export OTLP_TRACING_ENABLED=true
+export MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT='http://localhost:4318/v1/traces'
+
+export OTLP_METRICS_ENABLED=true
+export MANAGEMENT_OTLP_METRICS_EXPORT_URL='http://localhost:4318/v1/metrics'
+```
+
+The tracing exporter uses `management.opentelemetry.tracing.export.otlp.endpoint`; the metrics exporter uses `management.otlp.metrics.export.url`. Prometheus scraping at `/actuator/prometheus` remains available independently of OTLP metrics export.
 
 ## Swagger and OpenAPI
 
