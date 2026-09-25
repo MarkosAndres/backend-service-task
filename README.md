@@ -1,30 +1,67 @@
 # Incode Home Task
 
-Spring Boot application for company searches and verification retrieval. It includes H2 and PostgreSQL profiles, OpenAPI documentation, Actuator endpoints, Prometheus metrics, Caffeine caching, and OpenTelemetry Protocol (OTLP) trace and metric export.
+Three independently runnable Spring Boot services for company searches and verification retrieval. The backend service calls free and premium third-party providers over HTTP; neither provider is a dependency of the backend artifact.
+
+## Service topology
+
+| Service | Default port | Responsibilities |
+| --- | --- | --- |
+| `backend-service` | 8080 | Search orchestration, free-to-premium fallback, verification persistence, authentication, and observability |
+| `free-service` | 8081 | `GET /free-third-party`; simulates unavailability 40% of the time |
+| `premium-service` | 8082 | `GET /premium-third-party`; simulates unavailability 10% of the time |
+
+The backend calls `http://localhost:8081` and `http://localhost:8082` by default. Override these addresses with `FREE_PROVIDER_BASE_URL` and `PREMIUM_PROVIDER_BASE_URL`.
 
 ## Prerequisites
 
 - Java 25
-- PostgreSQL 16+ only when using the `database` profile
+- PostgreSQL 16+ only when using the backend's `database` profile
 
 The Gradle wrapper is included, so a separate Gradle installation is not required.
 
-## Run the application
+## Run the services
 
-The application listens on `http://localhost:8080`.
+Start each provider in a separate terminal:
+
+```bash
+./gradlew :free-service:bootRun
+./gradlew :premium-service:bootRun
+```
+
+Then start the backend at `http://localhost:8080`:
+
+```bash
+./gradlew :backend-service:bootRun
+```
+
+Each module produces its own executable JAR with `./gradlew bootJar`.
+
+### Run from IntelliJ IDEA
+
+Open the repository root as a Gradle project, sync it, and configure Java 25 as both the Project SDK and Gradle JVM. Create three Spring Boot run configurations:
+
+| Name | Main class | Module classpath | Working directory |
+| --- | --- | --- | --- |
+| Free Service | `com.marcos.incode_home_task.FreeServiceApplication` | `free-service` | `$PROJECT_DIR$/free-service` |
+| Premium Service | `com.marcos.incode_home_task.PremiumServiceApplication` | `premium-service` | `$PROJECT_DIR$/premium-service` |
+| Backend Service | `com.marcos.incode_home_task.IncodeHomeTaskApplication` | `backend-service` | `$PROJECT_DIR$/backend-service` |
+
+Start Free Service and Premium Service before Backend Service. The working directories are important because relative paths, including the backend log file, resolve from them. This keeps the active backend log at `backend-service/logs/incode-home-task.log`.
+
+You can create a Compound run configuration containing all three entries for one-click startup. If Spring Boot run configurations are not available in your IntelliJ edition, create standard Application configurations with the same main classes, modules, and working directories.
 
 ### Local profile
 
-The `local` profile is the default. It uses an in-memory H2 database, runs Flyway migrations, and disables OTLP trace export.
+The backend's `local` profile is the default. It uses an in-memory H2 database, runs Flyway migrations, and disables OTLP trace export.
 
 ```bash
-./gradlew bootRun
+./gradlew :backend-service:bootRun
 ```
 
 To activate it explicitly:
 
 ```bash
-./gradlew bootRun --args='--spring.profiles.active=local'
+./gradlew :backend-service:bootRun --args='--spring.profiles.active=local'
 ```
 
 The H2 console is available at `http://localhost:8080/h2-console`.
@@ -49,14 +86,14 @@ export DATABASE_URL='jdbc:postgresql://localhost:5432/incode_home_task'
 export DATABASE_USERNAME='hometask'
 export DATABASE_PASSWORD='mypass321'
 
-./gradlew bootRun --args='--spring.profiles.active=database'
+./gradlew :backend-service:bootRun --args='--spring.profiles.active=database'
 ```
 
 `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` default to `jdbc:postgresql://localhost:5432/incode_home_task`, `hometask`, and `mypass321`, respectively. The configured PostgreSQL JDBC driver, Flyway PostgreSQL support, and `TIMESTAMP WITH TIME ZONE` migration are compatible with PostgreSQL.
 
 ### OTLP export
 
-OTLP trace and metric export are disabled in both profiles by default. The Spring Boot 4.1 configuration names used by this project are current:
+OTLP trace and metric export are disabled in both backend profiles by default. The Spring Boot 4.1 configuration names used by the backend are current:
 
 - `management.tracing.export.otlp.enabled` for trace-export enablement
 - `management.otlp.metrics.export.enabled` for metrics-export enablement
@@ -75,10 +112,12 @@ The tracing exporter uses `management.opentelemetry.tracing.export.otlp.endpoint
 
 ## Swagger and OpenAPI
 
-After starting the application, open Swagger UI at:
+After starting a service, open its Swagger UI at:
 
 ```text
 http://localhost:8080/swagger-ui.html
+http://localhost:8081/swagger-ui.html
+http://localhost:8082/swagger-ui.html
 ```
 
 The generated OpenAPI documents are also available at:
@@ -90,7 +129,7 @@ http://localhost:8080/v3/api-docs.yaml
 
 ## Actuator and metrics
 
-The following Actuator endpoints are exposed:
+The backend exposes the following Actuator endpoints:
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -115,7 +154,7 @@ curl http://localhost:8080/actuator/loggers
 
 `/actuator/prometheus` is the endpoint a Prometheus-compatible collector should scrape. It includes JVM, HTTP server, cache, and custom application metrics such as `backend.search.calls`, `backend.search.duration`, and third-party-provider counters.
 
-Application logs are written to `logs/incode-home-task.log` as well as the console. The log file is excluded from Git and can be viewed in a browser at `http://localhost:8080/actuator/logfile`.
+Backend application logs are written to `logs/incode-home-task.log` as well as the console. The log file is excluded from Git and can be viewed in a browser at `http://localhost:8080/actuator/logfile`.
 
 `/actuator/loggers` shows the active logger levels. It can also change a logger level at runtime; do not expose this endpoint publicly without authentication.
 

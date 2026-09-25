@@ -1,1 +1,3 @@
 rootProject.name = 'incode-home-task'
+
+include 'backend-service', 'free-service', 'premium-service'
